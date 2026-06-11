@@ -22,6 +22,8 @@ const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
 const bookRoutes = require('./routes/book');
 app.use('/api/books', bookRoutes);
+const authorRoutes = require('./routes/author');
+app.use('/api/author', authorRoutes);
 
 // if there's a port i say, use it. else use 3000. 
 const PORT = process.env.PORT || 3000;
