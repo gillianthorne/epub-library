@@ -14,7 +14,7 @@ router.post('/', async(req, res) => {
             `, [series_id, series_index, title, description, cover_path, epub_path, page_count, published_date]
         );
 
-        res.status(201).json({ message: "Book added successfully" });
+        res.status(201).json({ message: "Book added successfully", id: result.insertId  });
     } catch (err) {
         res.status(500).json({ error: "Something went wrong" });
     }
