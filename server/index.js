@@ -1,6 +1,7 @@
 const express = require('express');
 const session = require('express-session');
 require('dotenv').config();
+const authRoutes = require('./routes/auth');
 
 const app = express();
 
@@ -15,6 +16,8 @@ app.use(session({
     saveUninitialized: false, // don't create a session until someone actually logs in
     cooki0e: { secure: false } // cookies work over regualar http
 }));
+
+app.use('/api/auth', authRoutes);
 
 // if there's a port i say, use it. else use 3000. 
 const PORT = process.env.PORT || 3000;
