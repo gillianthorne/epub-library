@@ -25,7 +25,9 @@ app.use('/api/books', bookRoutes);
 const authorRoutes = require('./routes/author');
 app.use('/api/author', authorRoutes);
 const seriesRoutes = require('./routes/series');
-app.use('/api/series', seriesRoutes)
+app.use('/api/series', seriesRoutes);
+const genreRoutes = require('./routes/genre');
+app.use('/api/genre', genreRoutes);
 
 // if there's a port i say, use it. else use 3000. 
 const PORT = process.env.PORT || 3000;
