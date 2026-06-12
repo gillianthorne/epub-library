@@ -31,7 +31,9 @@ app.use('/api/genre', genreRoutes);
 const tagRoutes = require('./routes/tag');
 app.use('/api/tag', tagRoutes);
 const userBookRoutes = require('./routes/user_book');
-app.use('/api/userBook', userBookRoutes);
+app.use('/api/user_book', userBookRoutes);
+const tbrRoutes = require('./routes/tbr');
+app.use('/api/tbr', tbrRoutes);
 
 // if there's a port i say, use it. else use 3000. 
 const PORT = process.env.PORT || 3000;
