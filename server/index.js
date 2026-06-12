@@ -29,7 +29,8 @@ app.use('/api/tags', tagRoutes);
 const userBookRoutes = require('./routes/user_books');
 app.use('/api/user_books', userBookRoutes);
 const requestRoutes = require('./routes/requests');
-app.use('/api/requests', requestRoutes);
+app.use('/api/requests', requestRoutes);const seriesRoutes = require('./routes/series');
+app.use('/api/series', seriesRoutes);
 
 // if there's a port i say, use it. else use 3000. 
 const PORT = process.env.PORT || 3000;

@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server/index.js",
-    "dev": "nodemon server/index.js"
+    "dev": "nodemon server/index.js",
+    "import": "node import.js"
   },
   "keywords": [],
   "author": "",
@@ -15,9 +16,11 @@
   "dependencies": {
     "bcrypt": "^6.0.0",
     "dotenv": "^17.4.2",
+    "epub2": "^3.0.2",
     "express": "^5.2.1",
     "express-session": "^1.19.0",
-    "mysql2": "^3.22.5"
+    "mysql2": "^3.22.5",
+    "sharp": "^0.35.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
