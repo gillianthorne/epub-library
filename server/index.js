@@ -14,26 +14,22 @@ app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false, // don't resave the session if nothing is changed
     saveUninitialized: false, // don't create a session until someone actually logs in
-    cooki0e: { secure: false } // cookies work over regualar http
+    cookie: { secure: false } // cookies work over regualar http
 }));
 
 // routes!
-const authRoutes = require('./routes/auth');
-app.use('/api/auth', authRoutes);
-const bookRoutes = require('./routes/book');
+const bookRoutes = require('./routes/books');
 app.use('/api/books', bookRoutes);
-const authorRoutes = require('./routes/author');
-app.use('/api/author', authorRoutes);
-const seriesRoutes = require('./routes/series');
-app.use('/api/series', seriesRoutes);
-const genreRoutes = require('./routes/genre');
-app.use('/api/genre', genreRoutes);
-const tagRoutes = require('./routes/tag');
-app.use('/api/tag', tagRoutes);
-const userBookRoutes = require('./routes/user_book');
-app.use('/api/user_book', userBookRoutes);
-const tbrRoutes = require('./routes/tbr');
-app.use('/api/tbr', tbrRoutes);
+const authorRoutes = require('./routes/authors');
+app.use('/api/authors', authorRoutes);
+const genreRoutes = require('./routes/genres');
+app.use('/api/genres', genreRoutes);
+const tagRoutes = require('./routes/tags');
+app.use('/api/tags', tagRoutes);
+const userBookRoutes = require('./routes/user_books');
+app.use('/api/user_books', userBookRoutes);
+const requestRoutes = require('./routes/requests');
+app.use('/api/requests', requestRoutes);
 
 // if there's a port i say, use it. else use 3000. 
 const PORT = process.env.PORT || 3000;
