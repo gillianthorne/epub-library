@@ -1,0 +1,219 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+
+/* Box-sizing reset (https://css-tricks.com/inheriting-box-sizing-probably-slightly-better-best-practice/) */
+html {
+	box-sizing: border-box;
+    font-size: 16px;
+}
+*, *:before, *:after {
+	box-sizing: inherit;
+}
+
+:root {
+    --primary-background: #1a1612;
+    --contrast-background: #2a2018;
+    --accent: #c9a96e;
+    --text-primary: #e8d5b0;
+    --text-contrast: #6b5a42;
+    --title-font: "Playfair Display", serif;
+    --body-font: "Inter", sans-serif;
+}
+
+/* desktop version first with alterations for mobile using media queries */
+body {
+    font-family: var(--body-font);
+    padding: 0;
+    margin: 0;
+    background-color: var(--primary-background);
+    color: var(--text-primary);
+}
+
+header {
+    background-color: var(--contrast-background);
+    color: var(--text-primary);
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: var(--accent) 2px solid;
+    margin-bottom: 16px;
+}
+
+a {
+    color: var(--text-c);
+    text-decoration: none;
+}
+
+nav ul {
+    margin: 0;
+    padding: 0;
+}
+
+nav ul li {
+    display: inline-flex;
+    padding: 8px;
+    border-radius: 30px;
+    border: var(--contrast-background) 2px solid;
+
+}
+
+nav ul li a {
+    display: inline-block;
+    padding: 4px 8px;
+    text-decoration: none;
+}
+
+nav ul li:hover {
+    border: var(--accent) 2px solid;
+}
+
+h1 {
+    font-family: var(--title-font);
+    margin: 0;
+}
+
+.hamburger {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 4px 8px;
+}
+
+.book {
+    display: flex;
+    max-width: 700px;
+    border: var(--accent) 2px solid;
+    padding: 16px;
+    border-radius: 20px;
+    margin: 8px auto;
+}
+
+.user-log {
+    max-width: 700px;
+    border: var(--accent) 2px solid;
+    padding: 16px;
+    border-radius: 20px;
+    margin: 8px auto;
+}
+
+.book .cover {
+    height: 200px;
+}
+
+.book .details {
+    padding: 0 8px;
+    display: flex;
+    flex-direction: column;
+}
+
+.book .title {
+    font-family: var(--title-font);
+}
+
+.book .title, 
+.book .author, 
+.book .status, 
+.book .genres, 
+.book .summary, 
+.book .published,
+.user-log .status,
+.user-log .read-date,
+.user-log .read-pct,
+.user-log .notes {
+    margin: 0 0 8px 0;
+}
+
+.user-log .stars {
+    padding: 8px;
+}
+
+.book .genre-list {
+    margin: 0;
+    padding: 0;
+    display: inline;
+}
+
+.book .genre-list li {
+    display: inline;
+}
+
+.book .genre-list li::after {
+    content: ",";
+}
+
+.book .genre-list li:last-child::after {
+    content: none;
+}
+
+.book a:hover {
+    font-weight: 900;
+}
+
+.book .summary P:first-child,
+.user-log .notes p:first-child {
+    margin-top: 0;
+}
+
+.user-log p:last-child {
+    margin-bottom: 8px;
+}
+
+.user-log small {
+    color: var(--text-contrast);
+}
+
+.tbr-btn {
+    margin-left: auto;
+    background: none;
+    cursor: pointer;
+    border: none;
+    height: 60px;
+}
+
+.tbr-btn svg path {
+    fill: transparent;
+    stroke: var(--accent);
+    stroke-width: 2;
+}
+
+.tbr-btn.active svg path {
+    fill: var(--accent);
+    stroke: var(--accent);
+}
+
+
+@media (max-width: 768px) {
+    header {
+        flex-wrap: wrap;
+    }
+
+    h1 {
+        flex: 1;
+    }
+
+    .hamburger {
+        display: block;
+    }
+
+    nav {
+        width: 100%;
+    }
+
+    nav ul {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    nav ul li {
+        display: block;
+        text-align: center;
+    }
+
+    .main-nav.open ul {
+        display: flex;
+    }
+}

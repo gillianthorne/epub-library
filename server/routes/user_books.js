@@ -58,6 +58,21 @@ router.get('/:id', async (req, res) => {
     }
 })
 
+// get all user_books by book id
+router.get('/book/:book_id', async (req, res) => {
+    try {
+        const [rows] = await db.query(`
+            SELECT * FROM user_books
+            WHERE user_id = ? AND book_id = ?
+            ORDER BY date_started ASC`,
+        [req.session.user.id, req.params.book_id]);
+
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: "Something went wrong" });
+    }
+});
+
 // update entry
 router.put('/:id', async (req, res) => {
     const { status, progress_pct, rating, notes, date_started, date_finished } = req.body;

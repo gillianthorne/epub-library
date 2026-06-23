@@ -1,5 +1,6 @@
 const express = require('express');
 const session = require('express-session');
+const FileStore = require('session-file-store')(session);
 require('dotenv').config();
 
 
@@ -11,10 +12,14 @@ app.use(express.json());
 app.use(express.static('public'));
 // sets up user sessions so the app remembers who's logged in
 app.use(session({
+    store: new FileStore({ path: './sessions' }),
     secret: process.env.SESSION_SECRET,
     resave: false, // don't resave the session if nothing is changed
     saveUninitialized: false, // don't create a session until someone actually logs in
-    cookie: { secure: false } // cookies work over regualar http
+    cookie: { 
+        secure: false,
+        maxAge: 1000 * 60 * 60 * 24 * 30 // stay logged in for 30 days
+    } // cookies work over regualar http
 }));
 
 // routes!
@@ -29,8 +34,13 @@ app.use('/api/tags', tagRoutes);
 const userBookRoutes = require('./routes/user_books');
 app.use('/api/user_books', userBookRoutes);
 const requestRoutes = require('./routes/requests');
-app.use('/api/requests', requestRoutes);const seriesRoutes = require('./routes/series');
+app.use('/api/requests', requestRoutes);
+const seriesRoutes = require('./routes/series');
 app.use('/api/series', seriesRoutes);
+const authRoutes = require('./routes/auth');
+app.use('/api/auth', authRoutes);
+const tbrRoutes = require('./routes/tbr');
+app.use('/api/tbr', tbrRoutes);
 
 // if there's a port i say, use it. else use 3000. 
 const PORT = process.env.PORT || 3000;
