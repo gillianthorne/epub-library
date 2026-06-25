@@ -62,8 +62,12 @@ router.get('/:id', async (req, res) => {
 router.get('/book/:book_id', async (req, res) => {
     try {
         const [rows] = await db.query(`
-            SELECT * FROM user_books
-            WHERE user_id = ? AND book_id = ?
+            SELECT user_books.*,
+                books.cover_path,
+                books.title
+            FROM user_books
+            LEFT JOIN books ON user_books.book_id = books.id
+            WHERE user_books.user_id = ? AND user_books.book_id = ?
             ORDER BY date_started ASC`,
         [req.session.user.id, req.params.book_id]);
 
