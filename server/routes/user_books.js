@@ -4,13 +4,13 @@ const db = require('../db');
 const router = express.Router();
 // create entry
 router.post('/', async (req, res) => {
-    const { book_id, status, date_started, progress_pct } = req.body;
+    const { book_id, status, date_started, date_finished, progress_pct } = req.body;
 
     try {
         const [result] = await db.query(`
-            INSERT INTO user_books (user_id, book_id, status, date_started, progress_pct)
-            VALUES (?, ?, ?, ?, ?)`,
-        [req.session.user.id, book_id, status, date_started, progress_pct])
+            INSERT INTO user_books (user_id, book_id, status, date_started, date_finished, progress_pct)
+            VALUES (?, ?, ?, ?, ?, ?)`,
+        [req.session.user.id, book_id, status, date_started, date_finished, progress_pct])
         
         res.status(201).json({ message: "Entry added successfully", id: result.insertId });
     } catch (err) {

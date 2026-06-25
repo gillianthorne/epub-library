@@ -11,5 +11,12 @@ const pool = mysql.createPool({
     database: process.env.DB_NAME,
 });
 
+pool.on('connection', (connection) => {
+    connection.query("SET time_zone = '-04:00'");
+    // connection.query("SELECT @@session.time_zone", (err, rows) => {
+    //     console.log('session timezone:', rows);
+    // });
+});
+
 // promise means it uses async/await
 module.exports = pool.promise();

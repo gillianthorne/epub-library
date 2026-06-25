@@ -67,7 +67,7 @@ nav ul li:hover {
     border: var(--accent) 2px solid;
 }
 
-h1 {
+h1, h2 {
     font-family: var(--title-font);
     margin: 0;
 }
@@ -82,7 +82,7 @@ h1 {
     padding: 4px 8px;
 }
 
-.book {
+.book, .user-log {
     display: flex;
     max-width: 700px;
     border: var(--accent) 2px solid;
@@ -99,18 +99,14 @@ h1 {
     margin: 8px auto;
 }
 
-.book .cover {
+.book .cover, .user-log .cover {
     height: 200px;
 }
 
-.book .details {
+.book .details, .user-log .details {
     padding: 0 8px;
     display: flex;
     flex-direction: column;
-}
-
-.book .title {
-    font-family: var(--title-font);
 }
 
 .book .title, 
@@ -165,6 +161,34 @@ h1 {
     color: var(--text-contrast);
 }
 
+.log-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+
+.action-buttons {
+    max-width: 700px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.action-btn, .edit-form button[type="submit"], .log-header .edit-btn {
+    background: var(--contrast-background);
+    border: var(--primary-background) 2px solid;
+    border-radius: 30px;
+    padding: 8px 16px;
+    color: var(--text-primary);
+    font-family: var(--body-font);
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.action-btn:hover, .edit-form button[type="submit"]:hover,.log-header .edit-btn:hover {
+    border: var(--accent) 2px solid;
+}
+
 .tbr-btn {
     margin-left: auto;
     background: none;
@@ -184,6 +208,65 @@ h1 {
     stroke: var(--accent);
 }
 
+.edit-form {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 12px 16px;
+    align-items: center;
+    max-width: 700px;
+    border: var(--accent) 2px solid;
+    padding: 16px;
+    border-radius: 20px;
+    margin: 8px auto;
+}
+
+.edit-form label {
+    text-align: right;
+}
+
+.edit-form h2 {
+    grid-column: 1 / -1;
+    text-align: center;
+}
+
+.edit-form button[type="submit"] {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: 100px;
+}
+
+.edit-form input,
+.edit-form select,
+.edit-form textarea {
+    font-family: var(--body-font);
+    font-size: 1rem;
+    color: var(--text-primary);
+    background: var(--contrast-background);
+    border: 1px solid var(--text-contrast);
+    border-radius: 6px;
+    padding: 8px 12px;
+}
+
+.edit-form input:focus,
+.edit-form select:focus,
+.edit-form textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.edit-form textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.edit-form input[type="number"] {
+    max-width: 80px;
+}
+
+.edit-form select {
+    appearance: none;
+    padding-right: 32px;
+}
 
 @media (max-width: 768px) {
     header {
