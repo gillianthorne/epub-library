@@ -55,4 +55,26 @@ router.get('/me', (req, res) => {
     res.json(req.session.user);
 })
 
+router.post('/register', async (req, res) => {
+    const { secretCode, username, password, displayName } = req.body;
+
+    if (secretCode === process.env.INVITE_CODE) {
+        // encode the password
+        const passwordHash = await bcrypt.hash(password, 10);
+        try {
+            const [result] = await db.query(`INSERT INTO users (username, display_name, password_hash)
+                 VALUES (?, ?, ?)`, [username, displayName, passwordHash]);
+            res.status(201).json({ message: "Registration successful", id: result.insertId });
+        } catch (err) {
+            if (err.code === 'ER_DUP_ENTRY') {
+                return res.status(409).json({ error: "Username already taken" });
+            }
+            res.status(500).json({ error: "Something went wrong" });
+        }
+    } else {
+        console.log('help!!');
+        res.status(403).json({ error: "Incorrect invite code" });
+    }
+})
+
 module.exports = router;

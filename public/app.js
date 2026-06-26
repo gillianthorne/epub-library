@@ -34,18 +34,16 @@ function renderLogin() {
     <div class="login-container">
         <h2>Login</h2>
         <form id="login-form">
-            <div class="form-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" name="username" placeholder="Enter username" required>
-            </div>
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" placeholder="Enter password" required>
-            </div>
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" placeholder="Enter username" required>
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="Enter password" required>
             <!-- Submit Button -->
             <button type="submit">Sign In</button>
-            <p class="error-message" id="login-error"></p>
         </form>
+        <p class="error-message" id="login-error"></p>
+        <p>Don't have an account?</p>
+        <button onclick="renderSignup(); signUpResponse()">Sign up</button>
     </div>
     `
 };
@@ -70,6 +68,73 @@ async function loginResponse() {
         } else {
             document.querySelector('#login-error').textContent = "Invalid username or password";
         }
+    })
+}
+
+async function logout() {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    renderLogin();
+    loginResponse();
+}
+
+function renderSignup() {
+    app.innerHTML = `
+    <div class="login-container">
+        <h2>Sign Up</h2>
+        <form id="sign-up-form">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Enter username" required>
+                <label for="display-name">Display Name</label>
+                <input type="text" id="display-name" name="display-name" placeholder="Enter display name" required>
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter password" required>
+                <label for="secret">Secret Code</label>
+                <input type="text" id="secret" name="secret" placeholder="Enter secret code" required>
+            <button type="submit">Sign Up</button>
+        </form>
+        <p class="error-message"></p>
+    </div>
+        `
+}
+
+async function signUpResponse() {
+    const form = document.querySelector('#sign-up-form');
+    const errMsg = document.querySelector('.error-message');
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const username = document.querySelector("#username").value;
+        const password = document.querySelector("#password").value;
+        const displayName = document.querySelector('#display-name').value;
+        const secretCode = document.querySelector('#secret').value;
+
+        
+        const response = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ secretCode, username, password, displayName })
+        })
+
+        if (response.ok) {
+            const autoLoginResponse = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            if (autoLoginResponse.ok) {
+                renderApp();
+            } else {
+                renderLogin();
+                loginResponse();
+            }
+        } else {
+            const data = await response.json();
+            errMsg.textContent = data.error;
+        }
+
+        
     })
 }
 
@@ -114,14 +179,10 @@ function bookCard(book) {
             <div class="details">
                 <h2 class="title"><a href="#" onclick="renderIndividualBook(${book.id})">${book.title}</a></h2>
                 <p class="author"><a href="#">${book.authors}</a></p>
-                <p class="genres">${book.genres.split(",").join(", ")}</p>
-                <p class="status">Status: <span class="reading-status">${book.status ? book.status : 'unread'}</span></p>
+                <p class="genres">${book.genres ? book.genres.split(",").join(", ") : ""}</p>
+                <p class="status">Status: <span class="reading-status">${book.status || 'unread'}</span></p>
             </div>
-            <button class="tbr-btn ${book.tbr_id ? 'active' : ''}" aria-label="Add to TBR"  data-tbr-id="${book.tbr_id || ''}" data-book-id="${book.id}">
-                <svg width="40" height="44" viewBox="0 0 46 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M23 0L28.1436 15.8291H44.7932L31.3248 25.6118L36.4684 41.4409L23 31.6582L9.53157 41.4409L14.6752 25.6118L1.20677 15.8291H17.8564L23 0Z" fill="#aaaaaa"/>
-                </svg>
-            </button>
+            
         </div>
     `
 }
@@ -140,7 +201,7 @@ async function renderIndividualBook(id) {
 
         console.log(book.id);
 
-        app.innerHTML = bookData(book) + renderActionButtons(book.id) + userBook.map(book => userBookData(book)).join("");
+        app.innerHTML = bookData(book) + renderActionButtons(book) + userBook.map(book => userBookData(book)).join("");
         setupActionButtons();
         setupTbrButtons();
         setupEditButtons();
@@ -149,11 +210,11 @@ async function renderIndividualBook(id) {
     }
 }
 
-function renderActionButtons(bookId) {
+function renderActionButtons(book) {
         return `
         <div class="action-buttons">
-            <button class="action-btn" data-book-id="${bookId}" data-action="start">Start Reading</button>
-            <button class="action-btn" data-book-id="${bookId}" data-action="read">Mark as Read</button>
+            <button class="action-btn" data-book-id="${book.id}" data-tbr-id="${book.tbr_id || ''}" data-action="start">Start Reading</button>
+            <button class="action-btn" data-book-id="${book.id}" data-tbr-id="${book.tbr_id || ''}" data-action="read">Mark as Read</button>
         </div>
         `
 }
@@ -178,7 +239,11 @@ async function setupActionButtons() {
                         date_started: today
                      })
                 })
-                if (response.ok) renderIndividualBook(bookId);
+                if (response.ok) {
+                    const tbrId = btn.dataset.tbrId;
+                    if (tbrId) await fetch(`/api/tbr/${tbrId}`, { method: 'DELETE' });
+                    renderIndividualBook(bookId)
+                };
             } else if (action === 'read') {
                 const response = await fetch('/api/user_books', {
                     method: 'POST',
@@ -191,7 +256,12 @@ async function setupActionButtons() {
                         date_finished: today
                      })
                 })
-                if (response.ok) renderIndividualBook(bookId);
+                
+                if (response.ok) {
+                    const tbrId = btn.dataset.tbrId;
+                    if (tbrId) await fetch(`/api/tbr/${tbrId}`, { method: 'DELETE' });
+                    renderIndividualBook(bookId)
+                };
             }
         })
     })
@@ -205,7 +275,7 @@ function bookData(book) {
             <h2 class="title"><a href="#">${book.title}</a></h2>
             <p class="author"><a href="#">${book.authors}</a></p>
             <p class="published">Published <span class="publication-date">${formatDate(book.published_date)}</span></p>
-            <p class="genres">${book.genres.split(",").join(", ")}</p>
+            <p class="genres">${book.genres ? book.genres.split(",").join(", ") : ""}</p>
             <a href="/api/books/${book.id}/download" class="download-btn">Download EPUB</a>
             <div class="summary">${book.description}</div>
         </div>
@@ -218,24 +288,27 @@ function bookData(book) {
         `
 }
 
-function userBookData(book) {
-    console.log(book.updated_at);
+function userBookData(record) {
+    console.log(record.updated_at);
     return `
-    <div class="user-log" id="user-book-${book.id}">
-        <div class="log-header">
-            <h2 class="status">Status: ${book.status}</h2>
-            <button class="edit-btn" data-record-id="${book.id}">Edit</button>
-        </div>
-        <p>${formatDate(book.date_started)} to ${book.date_finished ? formatDate(book.date_finished) : "present"}</p>
-        <div>${Array(book.rating).fill(`<svg width="20" height="20" viewBox="0 0 46 44" fill="#c9a96e" xmlns="http://www.w3.org/2000/svg"><path d="M23 0L28.1436 15.8291H44.7932L31.3248 25.6118L36.4684 41.4409L23 31.6582L9.53157 41.4409L14.6752 25.6118L1.20677 15.8291H17.8564L23 0Z" fill="#c9a96e"/></svg>`).join('')}</div>
-        <p class="read-pct">${book.progress_pct}% finished</p>
-        <div class="notes">
-            <p>Notes:</p>
-            <p>${book.notes ? book.notes : ""}</p>
-        </div>
-        <small>Last updated ${
-            formatDateTime(book.updated_at)}</small>
-    </div>`
+        <div class="user-log" id="user-book-${record.id}">
+            <a href="#" onclick="renderIndividualBook(${record.book_id})"><img src="${record.cover_path}" class="cover"></a>
+            <div class="details">
+                <div class="log-header">
+                    <h2><a href="#" onclick="renderIndividualBook(${record.book_id})">${record.title}</a></h2>
+                    <button class="edit-btn" data-record-id="${record.id}">Edit</button>
+                </div>
+                <h3 class="status">Status: ${record.status === "dnf" ? "DNF" : record.status}</h3>
+                <p>${formatDate(record.date_started)} to ${record.date_finished ? formatDate(record.date_finished) : "present"}</p>
+                <div>${Array(record.rating).fill(`<svg width="20" height="20" viewBox="0 0 46 44" fill="#c9a96e" xmlns="http://www.w3.org/2000/svg"><path d="M23 0L28.1436 15.8291H44.7932L31.3248 25.6118L36.4684 41.4409L23 31.6582L9.53157 41.4409L14.6752 25.6118L1.20677 15.8291H17.8564L23 0Z" fill="#c9a96e"/></svg>`).join('')}</div>
+                <p class="read-pct">${record.progress_pct}% finished</p>
+                <div class="notes">
+                    <p>Notes:</p>
+                    <p>${record.notes ? record.notes : ""}</p>
+                </div>
+                <small>Last updated ${formatDateTime(record.updated_at)}</small>
+            </div>
+        </div>`
 }
 
 function setupTbrButtons() {
@@ -295,10 +368,12 @@ function userBookEditForm(book, bookTitle) {
 
                 <label for="notes-${book.id}">Notes</label>
                 <textarea name="notes" id="notes-${book.id}">${book.notes ? book.notes : ""}</textarea>
-
-                <button type="submit">Save</button>
-                <button type="button" class="cancel-btn" data-record-id="${userBook.id}">Cancel</button>
-        </form>
+                <div class="button-section">
+                    <button type="submit">Save</button>
+                    <button type="button" class="cancel-btn" data-record-id="${book.id}">Cancel</button>
+                    <button type="button" class="delete-btn" data-record-id="${book.id}">Delete</button>
+                </div>
+                </form>
     `
 }
 
@@ -313,7 +388,7 @@ function setupEditButtons() {
             console.log(record);
 
             const cardElement = document.getElementById(`user-book-${recordId}`);
-            cardElement.outerHTML = userBookEditForm(record, currentBook.title);
+            cardElement.outerHTML = userBookEditForm(record, record.title);
 
             setupEditForm();
         })
@@ -363,6 +438,20 @@ function setupEditForm() {
         form.outerHTML = userBookData(original);
         setupEditButtons();
     });
+
+    const deleteBtn = form.querySelector('.delete-btn');
+    deleteBtn.addEventListener('click', async () => {
+        if (confirm("Are you sure you want to delete this record?")) {
+            const response = await fetch(`/api/user_books/${recordId}`, { method: 'DELETE' });
+
+            if (response.ok) {
+                form.outerHTML = "";
+
+                const index = currentUserBooks.findIndex(b => b.id == recordId);
+                currentUserBooks.splice(index, 1);
+            }
+        }
+    })
 }
 
 function renderAuthors() {
@@ -378,40 +467,58 @@ function renderTags() {
 }
 
 async function renderShelf() {
-    app.innerHTML = '<p>Shelf app goes here</p>';
+    const response = await fetch('/api/user_books');
+
+    if (response.ok) {
+        const data = await response.json();
+
+        currentUserBooks = data;
+
+        app.innerHTML = data.map(book => userBookData(book)).join('');
+
+        setupEditButtons();
+    } else {
+        app.innerHTML = '<p class="error-message">Error!</p>';
+    }
 }
 
-function shelfCard(record) {
+async function renderTBR() {
+    const response = await fetch('/api/tbr');
+
+    if (response.ok) {
+        const data = await response.json();
+
+        app.innerHTML = data.map(book => tbrCards(book)).join('');
+
+        setupTbrButtons();
+        setupActionButtons();
+    } else {
+        app.innerHTML = '<p class="error-message">Error!</p>';
+    }
+}
+
+function tbrCards(record) {
     return `
-        <div class="user-log" id="user-book-${record.id}">
-            <a href="#" onclick="renderIndividualBook(${record.book_id})"><img src="${record.cover_path}" class="cover"></a>
-            <div class="details">
-                <a href="#" onclick="renderIndividualBook(${record.book_id})"><h2>${record.title}</h2></a>
-                <div class="log-header">
-                    <h3 class="status">Status: ${record.status}</h3>
-                    <button class="edit-btn" data-record-id="${record.id}">Edit</button>
-                </div>
-                <p>${formatDate(record.date_started)} to ${record.date_finished ? formatDate(record.date_finished) : "present"}</p>
-                <div>${Array(record.rating).fill(`<svg width="20" height="20" viewBox="0 0 46 44" fill="#c9a96e" xmlns="http://www.w3.org/2000/svg"><path d="M23 0L28.1436 15.8291H44.7932L31.3248 25.6118L36.4684 41.4409L23 31.6582L9.53157 41.4409L14.6752 25.6118L1.20677 15.8291H17.8564L23 0Z" fill="#c9a96e"/></svg>`).join('')}</div>
-                <p class="read-pct">${record.progress_pct}% finished</p>
-                <div class="notes">
-                    <p>Notes:</p>
-                    <p>${record.notes ? record.notes : ""}</p>
-                </div>
-                <small>Last updated ${formatDateTime(record.updated_at)}</small>
+    <div class="tbr-record" id="tbr-record-${record.id}">
+        <a href="#" onclick="renderIndividualBook(${record.book_id})"><img src="${record.cover_path}" class="cover"></a>
+        <div class="details">
+            <div class="log-header">
+                <h2><a href="#" onclick="renderIndividualBook(${record.book_id})">${record.title}</a></h2>
+                <button class="tbr-btn active" aria-label="Add to TBR"  data-tbr-id="${record.id || ''}" data-book-id="${record.book_id}">
+                    <svg width="40" height="44" viewBox="0 0 46 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M23 0L28.1436 15.8291H44.7932L31.3248 25.6118L36.4684 41.4409L23 31.6582L9.53157 41.4409L14.6752 25.6118L1.20677 15.8291H17.8564L23 0Z" fill="#aaaaaa"/>
+                    </svg>
+                </button>
             </div>
-            
-        </div>
+            <p>${record.authors}</p>
+            <p>${record.series ? record.series : ""}</p>
+            <div class="action-buttons">
+                <button class="action-btn" data-book-id="${record.book_id}" data-tbr-id="${record.id}" data-action="start">Start Reading</button>
+                <button class="action-btn" data-book-id="${record.book_id}" data-tbr-id="${record.id}" data-action="read">Mark as Read</button>
+            </div>
+        </div> 
+    </div>
     `
-}
-
-function renderTBR() {
-    app.innerHTML = '<p>TBR app goes here</p>';
-}
-
-function logout() {
-    // logout function goes here
-    renderLogin()
 }
 
 function formatDate(dateString) {
