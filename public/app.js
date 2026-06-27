@@ -587,14 +587,17 @@ function setupEditForm() {
     })
 }
 
+javascript// TODO: build out author browsing — see stretch goals list
 function renderAuthors() {
         app.innerHTML = '<p>Author app goes here</p>';
 }
 
+// TODO: build out genre browsing — see stretch goals list
 function renderGenres() {
         app.innerHTML = '<p>Genres app goes here</p>';
 }
 
+// TODO: build out tag browsing — see stretch goals list
 function renderTags() {
     app.innerHTML = '<p>Tags app goes here</p>';
 }
