@@ -268,7 +268,11 @@ function bookCard(book) {
                 <p class="genres">${book.genres ? book.genres.split(",").join(", ") : ""}</p>
                 <p class="status">Status: <span class="reading-status">${book.status || 'unread'}</span></p>
             </div>
-            
+            <button class="tbr-btn ${book.tbr_id ? 'active' : ''}" aria-label="Add to TBR"  data-tbr-id="${book.tbr_id || ''}" data-book-id="${book.id}">
+                <svg width="40" height="44" viewBox="0 0 46 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M23 0L28.1436 15.8291H44.7932L31.3248 25.6118L36.4684 41.4409L23 31.6582L9.53157 41.4409L14.6752 25.6118L1.20677 15.8291H17.8564L23 0Z" fill="#aaaaaa"/>
+                </svg>
+            </button>
         </div>
     `
 }
@@ -404,7 +408,7 @@ function userBookData(record) {
                     <button class="edit-btn" data-record-id="${record.id}">Edit</button>
                 </div>
                 <h3 class="status">Status: ${record.status === "dnf" ? "DNF" : record.status}</h3>
-                <p>${formatDate(record.date_started)} to ${record.date_finished ? formatDate(record.date_finished) : "present"}</p>
+                <p class="publication">${formatDate(record.date_started)} to ${record.date_finished ? formatDate(record.date_finished) : "present"}</p>
                 <div>${Array(record.rating).fill(`<svg width="20" height="20" viewBox="0 0 46 44" fill="#c9a96e" xmlns="http://www.w3.org/2000/svg"><path d="M23 0L28.1436 15.8291H44.7932L31.3248 25.6118L36.4684 41.4409L23 31.6582L9.53157 41.4409L14.6752 25.6118L1.20677 15.8291H17.8564L23 0Z" fill="#c9a96e"/></svg>`).join('')}</div>
                 <p class="read-pct">${record.progress_pct}% finished</p>
                 <div class="progress-bar">
