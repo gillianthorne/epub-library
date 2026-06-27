@@ -407,6 +407,9 @@ function userBookData(record) {
                 <p>${formatDate(record.date_started)} to ${record.date_finished ? formatDate(record.date_finished) : "present"}</p>
                 <div>${Array(record.rating).fill(`<svg width="20" height="20" viewBox="0 0 46 44" fill="#c9a96e" xmlns="http://www.w3.org/2000/svg"><path d="M23 0L28.1436 15.8291H44.7932L31.3248 25.6118L36.4684 41.4409L23 31.6582L9.53157 41.4409L14.6752 25.6118L1.20677 15.8291H17.8564L23 0Z" fill="#c9a96e"/></svg>`).join('')}</div>
                 <p class="read-pct">${record.progress_pct}% finished</p>
+                <div class="progress-bar">
+                    <div class="percent-progress" style="width: ${record.progress_pct}%"></div>
+                </div>
                 <div class="notes">
                     <p>Notes:</p>
                     <p>${record.notes ? record.notes : ""}</p>
@@ -587,7 +590,7 @@ function setupEditForm() {
     })
 }
 
-javascript// TODO: build out author browsing — see stretch goals list
+// TODO: build out author browsing — see stretch goals list
 function renderAuthors() {
         app.innerHTML = '<p>Author app goes here</p>';
 }

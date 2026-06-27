@@ -26,6 +26,7 @@ body {
     margin: 0;
     background-color: var(--primary-background);
     color: var(--text-primary);
+    line-height: 1.5;
 }
 
 header {
@@ -82,11 +83,15 @@ h1, h2 {
     padding: 4px 8px;
 }
 
+#app {
+    margin: 0 16px;
+}
+
 .book, .user-log, .tbr-record  {
     display: flex;
     max-width: 700px;
     border: var(--accent) 2px solid;
-    padding: 16px;
+    padding: 8px 16px;
     border-radius: 20px;
     margin: 8px auto;
 }
@@ -156,6 +161,19 @@ h1, h2 {
 
 .user-log small {
     color: var(--text-contrast);
+}
+
+.user-log .progress-bar {
+    height: 5px;
+    width: 100%;
+    background-color: var(--text-contrast);
+    border-radius: 3px;
+}
+
+.user-log .percent-progress {
+    height: 5px;
+    background-color: var(--accent);
+    border-radius: 3px;
 }
 
 .log-header {
@@ -299,10 +317,9 @@ h1, h2 {
 #portfolio {
     max-width: 700px;
     margin: 0 auto;
-    padding: 0 16px;
 }
 
-#id .title {
+#portfolio .title {
     font-size: 2.4em;
 }
 
