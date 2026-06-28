@@ -46,6 +46,13 @@ router.get('/', async (req, res) => {
             GROUP BY books.id, user_books.status, user_books.date_finished, tbr_lists.id
             ORDER BY series.id ASC
             `, [req.session.user.id, req.session.user.id]);
+
+        // found this on the internet and i do NOT understand it but i modified it to work
+        rows.sort((a, b) => {
+            const authorA = a.authors?.[0]?.name ?? '';
+            const authorB = b.authors?.[0]?.name ?? '';
+            return authorA.localeCompare(authorB);
+        });
         res.json(rows);
     } catch (err) {
         res.status(500).json({ error: "Something went wrong" });
