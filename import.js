@@ -83,8 +83,8 @@ async function  importSingleEpub(filename) {
     const [existingBook] = await db.query(`
         SELECT books.* FROM books
         LEFT JOIN book_authors ON books.id = book_authors.book_id
-        WHERE books.title = ? AND book_authors.author_id = ?`,
-        [title, authorId]
+        WHERE books.file_path = ? AND book_authors.author_id = ?`,
+        [filepath, authorId]
     );
 
     if (existingBook.length > 0) {
