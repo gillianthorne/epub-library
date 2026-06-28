@@ -84,7 +84,7 @@ h1, h2 {
 }
 
 #app {
-    margin: 0 16px;
+    margin: 0 16px 16px;
 }
 
 .book, .user-log, .tbr-record  {
@@ -117,10 +117,13 @@ h1, h2 {
 .book .genres, 
 .book .summary, 
 .book .published,
+.book .download-btn,
 .user-log .status,
 .user-log .read-date,
 .user-log .read-pct,
-.user-log .notes {
+.user-log .notes,
+.user-log .progress-bar,
+.user-log .publication {
     margin: 0 0 8px 0;
 }
 
@@ -151,11 +154,11 @@ h1, h2 {
 }
 
 .book .summary P:first-child,
-.user-log .notes p:first-child {
-    margin-top: 0;
+.user-log .notes p {
+    margin: 4px 0;
 }
 
-.user-log p:last-child {
+.user-log .notes p:last-child {
     margin-bottom: 8px;
 }
 

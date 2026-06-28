@@ -3,6 +3,7 @@ const hamburger = document.querySelector('.hamburger');
 const mainNav = document.querySelector('.main-nav');
 const tbrBtn = document.querySelector('.tbr-btn');
 const app = document.querySelector('#app');
+const displayName = document.querySelectorAll('.display-name');
 
 // module level states - these need to live outside of any single function 
 // because event listeners like edit button are triggered after the function
@@ -198,6 +199,8 @@ function renderApp() {
 async function requireAuth(callback) {
     const response = await fetch('/api/auth/me');
     if (response.ok) {
+        const data = await response.json();
+        displayName.forEach(name => name.innerHTML = data.display_name);
         callback();
     } else {
         renderLogin();
@@ -264,11 +267,15 @@ function bookCard(book) {
             <img src="${book.cover_path}" class="cover">
             <div class="details">
                 <h2 class="title"><a href="#" onclick="renderIndividualBook(${book.id})">${book.title}</a></h2>
-                <p class="author"><a href="#">${book.authors}</a></p>
+                <p class="author"><a href="#">${book.authors.map(a => `<a href="#" onclick="renderAuthorPage(${a.id})">${a.name}</a>`).join(', ')}</a></p>
                 <p class="genres">${book.genres ? book.genres.split(",").join(", ") : ""}</p>
-                <p class="status">Status: <span class="reading-status">${book.status || 'unread'}</span></p>
+                <p class="status">Status: <span class="reading-status">${book.status ?? 'unread'}</span></p>
             </div>
-            
+            <button class="tbr-btn ${book.tbr_id ? 'active' : ''}" aria-label="Add to TBR"  data-tbr-id="${book.tbr_id ?? ''}" data-book-id="${book.id}">
+                <svg width="40" height="44" viewBox="0 0 46 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M23 0L28.1436 15.8291H44.7932L31.3248 25.6118L36.4684 41.4409L23 31.6582L9.53157 41.4409L14.6752 25.6118L1.20677 15.8291H17.8564L23 0Z" fill="#aaaaaa"/>
+                </svg>
+            </button>
         </div>
     `
 }
@@ -307,8 +314,8 @@ async function renderIndividualBook(id) {
 function renderActionButtons(book) {
         return `
         <div class="action-buttons">
-            <button class="action-btn" data-book-id="${book.id}" data-tbr-id="${book.tbr_id || ''}" data-action="start">Start Reading</button>
-            <button class="action-btn" data-book-id="${book.id}" data-tbr-id="${book.tbr_id || ''}" data-action="read">Mark as Read</button>
+            <button class="action-btn" data-book-id="${book.id}" data-tbr-id="${book.tbr_id ?? ''}" data-action="start">Start Reading</button>
+            <button class="action-btn" data-book-id="${book.id}" data-tbr-id="${book.tbr_id ?? ''}" data-action="read">Mark as Read</button>
         </div>
         `
 }
@@ -381,7 +388,7 @@ function bookData(book) {
             <a href="/api/books/${book.id}/download" class="download-btn">Download EPUB</a>
             <div class="summary">${book.description}</div>
         </div>
-        <button class="tbr-btn ${book.tbr_id ? 'active' : ''}" aria-label="Add to TBR"  data-tbr-id="${book.tbr_id || ''}" data-book-id="${book.id}">
+        <button class="tbr-btn ${book.tbr_id ? 'active' : ''}" aria-label="Add to TBR"  data-tbr-id="${book.tbr_id ?? ''}" data-book-id="${book.id}">
             <svg width="40" height="44" viewBox="0 0 46 44" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M23 0L28.1436 15.8291H44.7932L31.3248 25.6118L36.4684 41.4409L23 31.6582L9.53157 41.4409L14.6752 25.6118L1.20677 15.8291H17.8564L23 0Z" fill="#aaaaaa"/>
             </svg>
@@ -404,15 +411,15 @@ function userBookData(record) {
                     <button class="edit-btn" data-record-id="${record.id}">Edit</button>
                 </div>
                 <h3 class="status">Status: ${record.status === "dnf" ? "DNF" : record.status}</h3>
-                <p>${formatDate(record.date_started)} to ${record.date_finished ? formatDate(record.date_finished) : "present"}</p>
-                <div>${Array(record.rating).fill(`<svg width="20" height="20" viewBox="0 0 46 44" fill="#c9a96e" xmlns="http://www.w3.org/2000/svg"><path d="M23 0L28.1436 15.8291H44.7932L31.3248 25.6118L36.4684 41.4409L23 31.6582L9.53157 41.4409L14.6752 25.6118L1.20677 15.8291H17.8564L23 0Z" fill="#c9a96e"/></svg>`).join('')}</div>
+                <p class="publication">${formatDate(record.date_started)} to ${record.date_finished ? formatDate(record.date_finished) : "present"}</p>
+                <div>${record.rating ? renderStars(record.rating) : '<span class="unrated">Unrated</span>'}</div>
                 <p class="read-pct">${record.progress_pct}% finished</p>
                 <div class="progress-bar">
                     <div class="percent-progress" style="width: ${record.progress_pct}%"></div>
                 </div>
                 <div class="notes">
                     <p>Notes:</p>
-                    <p>${record.notes ? record.notes : ""}</p>
+                    <p>${record.notes ?? ""}</p>
                 </div>
                 <small>Last updated ${formatDateTime(record.updated_at)}</small>
             </div>
@@ -479,10 +486,10 @@ function userBookEditForm(book, bookTitle) {
                 </select>
 
                 <label for="progress-pct-${book.id}">Progress</label>
-                <input name="progress-pct" id="progress-pct-${book.id}" type="number" min="0" max="100" value="${book.progress_pct ? book.progress_pct : ""}">
+                <input name="progress-pct" id="progress-pct-${book.id}" type="number" min="0" max="100" value="${book.progress_pct ?? ""}">
 
                 <label for="rating-${book.id}">Rating</label>
-                <input name="rating" id="rating-${book.id}" type="number" min="1" max="5" value="${book.rating ? book.rating : ""}">
+                <input name="rating" id="rating-${book.id}" type="number" min="1" max="5" value="${book.rating ?? ""}">
 
                 <label for="notes-${book.id}">Notes</label>
                 <textarea name="notes" id="notes-${book.id}">${book.notes ? book.notes : ""}</textarea>
@@ -651,7 +658,7 @@ function tbrCards(record) {
         <div class="details">
             <div class="log-header">
                 <h2><a href="#" onclick="renderIndividualBook(${record.book_id})">${record.title}</a></h2>
-                <button class="tbr-btn active" aria-label="Add to TBR"  data-tbr-id="${record.id || ''}" data-book-id="${record.book_id}">
+                <button class="tbr-btn active" aria-label="Add to TBR"  data-tbr-id="${record.id ?? ''}" data-book-id="${record.book_id}">
                     <svg width="40" height="44" viewBox="0 0 46 44" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M23 0L28.1436 15.8291H44.7932L31.3248 25.6118L36.4684 41.4409L23 31.6582L9.53157 41.4409L14.6752 25.6118L1.20677 15.8291H17.8564L23 0Z" fill="#aaaaaa"/>
                     </svg>
@@ -690,6 +697,10 @@ function formatDateTime(dateString) {
 
     const get = type => parts.find(p => p.type === type).value;
     return `${get('year')}-${get('month')}-${get('day')} ${get('hour')}:${get('minute')}:${get('second')}`;
+}
+
+function renderStars(rating) {
+    return Array(rating).fill(`<svg width="20" height="20" viewBox="0 0 46 44" fill="#c9a96e" xmlns="http://www.w3.org/2000/svg"><path d="M23 0L28.1436 15.8291H44.7932L31.3248 25.6118L36.4684 41.4409L23 31.6582L9.53157 41.4409L14.6752 25.6118L1.20677 15.8291H17.8564L23 0Z" fill="#c9a96e"/></svg>`).join('')
 }
 
 // Kick off the app — renders the header/nav (already in index.html) and the
