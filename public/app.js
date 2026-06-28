@@ -251,8 +251,8 @@ async function renderBooks() {
 
     if (response.ok) {
         const data = await response.json();
-
-        app.innerHTML = data.map(book => bookCard(book)).join('')
+        app.innerHTML = data.map(book => bookCard(book)).join('');
+        console.log(data.length);
         setupTbrButtons(); // attach click handlers to the tbr stars
     } else {
         app.innerHTML = '<p class="error-message">Error!</p>'
@@ -267,8 +267,8 @@ function bookCard(book) {
             <img src="${book.cover_path}" class="cover">
             <div class="details">
                 <h2 class="title"><a href="#" onclick="renderIndividualBook(${book.id})">${book.title}</a></h2>
-                <p class="author"><a href="#">${book.authors.map(a => `<a href="#" onclick="renderAuthorPage(${a.id})">${a.name}</a>`).join(', ')}</a></p>
-                <p class="genres">${book.genres ? book.genres.split(",").join(", ") : ""}</p>
+                <p class="author">${book.authors ? book.authors.map(a => `<a href="#" onclick="renderAuthorPage(${a.id})">${a.name}</a>`).join(', ') : 'No authors assigned'}</p>
+                <p class="genres">${book.genres ? book.genres.map(g => `<a href="#" onclick="renderGenrePage(${g.id})">${g.name}</a>`).join(', ') : 'No genres assigned'}</p>
                 <p class="status">Status: <span class="reading-status">${book.status ?? 'unread'}</span></p>
             </div>
             <button class="tbr-btn ${book.tbr_id ? 'active' : ''}" aria-label="Add to TBR"  data-tbr-id="${book.tbr_id ?? ''}" data-book-id="${book.id}">

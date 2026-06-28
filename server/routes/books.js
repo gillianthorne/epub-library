@@ -28,25 +28,28 @@ router.get('/', async (req, res) => {
         const [rows] = await db.query(`
             SELECT books.*,
                 series.name AS series_name,
-                GROUP_CONCAT(DISTINCT authors.name) AS authors,
-                GROUP_CONCAT(DISTINCT genres.name) AS genres,
+                (SELECT JSON_ARRAYAGG(JSON_OBJECT('id', a.id, 'name', a.name))
+                    FROM book_authors ba
+                    JOIN authors a ON ba.author_id = a.id
+                    WHERE ba.book_id = books.id) AS authors,
+                (SELECT JSON_ARRAYAGG(JSON_OBJECT('id', g.id, 'name', g.name))
+                    FROM book_genres bg
+                    JOIN genres g ON bg.genre_id = g.id
+                    WHERE bg.book_id = books.id) AS genres,
                 user_books.status,
                 user_books.date_finished,
                 tbr_lists.id AS tbr_id
             FROM books
             LEFT JOIN series ON books.series_id = series.id
-            LEFT JOIN book_authors ON books.id = book_authors.book_id
-            LEFT JOIN authors ON book_authors.author_id = authors.id
-            LEFT JOIN book_genres ON books.id = book_genres.book_id
-            LEFT JOIN genres ON book_genres.genre_id = genres.id
             LEFT JOIN user_books ON books.id = user_books.book_id AND user_books.user_id = ?
             LEFT JOIN tbr_lists ON books.id = tbr_lists.book_id AND tbr_lists.user_id = ?
-            GROUP BY books.id
-            ORDER BY authors.name ASC, series.id ASC
-            `, [req.session.user.id, req.params.id]);
+            GROUP BY books.id, user_books.status, user_books.date_finished, tbr_lists.id
+            ORDER BY series.id ASC
+            `, [req.session.user.id, req.session.user.id]);
         res.json(rows);
     } catch (err) {
         res.status(500).json({ error: "Something went wrong" });
+        console.log(err);
     }
 });
 
@@ -56,20 +59,20 @@ router.get('/:id', async (req, res) => {
         const [rows] = await db.query(`
             SELECT books.*, 
                 series.name AS series_name,
-                GROUP_CONCAT(DISTINCT authors.name) AS authors,
-                GROUP_CONCAT(DISTINCT genres.name) AS genres,
+                (SELECT JSON_ARRAYAGG(JSON_OBJECT('id', a.id, 'name', a.name))
+                    FROM book_authors ba
+                    JOIN authors a ON ba.author_id = a.id
+                    WHERE ba.book_id = books.id) AS authors,
+                (SELECT JSON_ARRAYAGG(JSON_OBJECT('id', g.id, 'name', g.name))
+                    FROM book_genres bg
+                    JOIN genres g ON bg.genre_id = g.id
+                    WHERE bg.book_id = books.id) AS genres,
                 tbr_lists.id AS tbr_id
             FROM books
-            LEFT JOIN series ON books.series_id = series.id
-            LEFT JOIN book_authors ON books.id = book_authors.book_id
-            LEFT JOIN authors ON book_authors.author_id = authors.id
-            LEFT JOIN book_genres ON books.id = book_genres.book_id
-            LEFT JOIN genres ON book_genres.genre_id = genres.id
-            LEFT JOIN book_tags ON books.id = book_tags.book_id
-            LEFT JOIN tags ON book_tags.tag_id = tags.id
+            JOIN series ON books.series_id = series.id
             LEFT JOIN tbr_lists ON books.id = tbr_lists.book_id AND tbr_lists.user_id = ?
             WHERE books.id = ?
-            GROUP BY books.id
+            GROUP BY books.id, tbr_lists.id
         `, [req.session.user.id, req.params.id]);
 
         if (rows.length === 0) {
