@@ -188,6 +188,9 @@ h1, h2 {
     width: 100%;
 }
 
+.notes img {
+    max-width: 100%;
+}
 
 .action-buttons {
     max-width: 700px;
