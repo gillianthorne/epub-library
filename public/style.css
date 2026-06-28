@@ -97,7 +97,9 @@ h1, h2 {
 }
 
 .book .cover, .user-log .cover, .tbr-record .cover {
-    height: 200px;
+    width: 150px;
+    height: 240px;
+    contain: cover;
 }
 
 .book .details {
@@ -356,5 +358,24 @@ h1, h2 {
 
     .main-nav.open ul {
         display: flex;
+    }
+
+    .book, .user-log, .tbr-record  {
+        display: flex;
+        max-width: 100%;
+        border: var(--accent) 2px solid;
+        padding: 8px 16px;
+        border-radius: 20px;
+        margin: 8px auto;
+    }
+
+    .book .cover, .user-log .cover, .tbr-record .cover {
+        width: 80px;
+        height: 128px;
+        object-fit: cover;    
+    }
+
+    .book .title {
+        font-size: 1.3em;
     }
 }
