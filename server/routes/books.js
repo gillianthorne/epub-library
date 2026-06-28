@@ -76,7 +76,7 @@ router.get('/:id', async (req, res) => {
                     WHERE bg.book_id = books.id) AS genres,
                 tbr_lists.id AS tbr_id
             FROM books
-            JOIN series ON books.series_id = series.id
+            LEFT JOIN series ON books.series_id = series.id
             LEFT JOIN tbr_lists ON books.id = tbr_lists.book_id AND tbr_lists.user_id = ?
             WHERE books.id = ?
             GROUP BY books.id, tbr_lists.id

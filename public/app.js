@@ -382,9 +382,9 @@ function bookData(book) {
         <img src="${book.cover_path}" class="cover">
         <div class="details">
             <h2 class="title"><a href="#">${book.title}</a></h2>
-            <p class="author"><a href="#">${book.authors}</a></p>
+            <p class="author"><a href="#">${book.authors ? book.authors.map(a => `<a href="#" onclick="renderGenrePage(${a.id})">${a.name}</a>`).join(', ') : 'No authors assigned'}</a></p>
             <p class="published">Published <span class="publication-date">${formatDate(book.published_date)}</span></p>
-            <p class="genres">${book.genres ? book.genres.split(",").join(", ") : ""}</p>
+            <p class="genres">${book.genres ? book.genres.map(g => `<a href="#" onclick="renderGenrePage(${g.id})">${g.name}</a>`).join(', ') : 'No genres assigned'}</p>
             <a href="/api/books/${book.id}/download" class="download-btn">Download EPUB</a>
             <div class="summary">${book.description}</div>
         </div>
@@ -419,7 +419,7 @@ function userBookData(record) {
                 </div>
                 <div class="notes">
                     <p>Notes:</p>
-                    <p>${record.notes ?? ""}</p>
+                    <p>${formatNotes(record.notes)}</p>
                 </div>
                 <small>Last updated ${formatDateTime(record.updated_at)}</small>
             </div>
@@ -699,10 +699,59 @@ function formatDateTime(dateString) {
     return `${get('year')}-${get('month')}-${get('day')} ${get('hour')}:${get('minute')}:${get('second')}`;
 }
 
+// this literally just makes it cleaner in the html
 function renderStars(rating) {
     return Array(rating).fill(`<svg width="20" height="20" viewBox="0 0 46 44" fill="#c9a96e" xmlns="http://www.w3.org/2000/svg"><path d="M23 0L28.1436 15.8291H44.7932L31.3248 25.6118L36.4684 41.4409L23 31.6582L9.53157 41.4409L14.6752 25.6118L1.20677 15.8291H17.8564L23 0Z" fill="#c9a96e"/></svg>`).join('')
 }
 
+function formatNotes(notes) {
+    // if we don't have any notes, return that
+    if (!notes) return '';
+    console.log('input:', notes);
+
+    let formatted = notes
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    
+    console.log('after escape:', formatted);
+
+    formatted = formatted.replace(/!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g, '<img src="$2" alt="$1">');
+    formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    formatted = formatted.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    formatted = formatted.replace(/\+\+([^+]+)\+\+/g, '<u>$1</u>');
+    formatted = convertLists(formatted);
+
+    console.log('final:', formatted);
+
+    return formatted.replace(/\n/g, '<br>');
+}
+
+function convertLists(text) {
+    const lines = text.split('\n');
+    let result = [];
+    let inList = false;
+
+    for (const line of lines) {
+        const match = line.match(/^- (.+)/);
+        if (match) {
+            if (!inList) {
+                result.push('<ul>');
+                inList = true;
+            }
+            result.push(`<li>${match[1]}</li>`);
+        } else {
+            if (inList) {
+                result.push('</ul>');
+                inList = false;
+            }
+            result.push(line);
+        }
+    }
+    if (inList) result.push('</ul>'); // close if notes end while still in a list
+
+    return result.join('\n');
+}
 // Kick off the app — renders the header/nav (already in index.html) and the
 // default About content, then wires up the nav for when the user clicks in
 renderApp();
