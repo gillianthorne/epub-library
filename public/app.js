@@ -271,7 +271,7 @@ function bookCard(book) {
                 <p class="genres">${book.genres ? book.genres.map(g => `<a href="#" onclick="renderGenrePage(${g.id})">${g.name}</a>`).join(', ') : 'No genres assigned'}</p>
                 <p class="status">Status: <span class="reading-status">${book.status ?? 'unread'}</span></p>
             </div>
-            <button class="tbr-btn ${book.tbr_id ? 'active' : ''}" aria-label="Add to TBR"  data-tbr-id="${book.tbr_id ?? ''}" data-book-id="${book.id}">
+            <button class="tbr-btn ${book.tbr_id ? 'active' : ''}" aria-label="Add to TBR"  data-tbr-id="${book.tbr_id || ''}" data-book-id="${book.id}">
                 <svg width="40" height="44" viewBox="0 0 46 44" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M23 0L28.1436 15.8291H44.7932L31.3248 25.6118L36.4684 41.4409L23 31.6582L9.53157 41.4409L14.6752 25.6118L1.20677 15.8291H17.8564L23 0Z" fill="#aaaaaa"/>
                 </svg>
