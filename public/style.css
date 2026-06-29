@@ -87,7 +87,7 @@ h1, h2 {
     margin: 0 16px 16px;
 }
 
-.book, .user-log, .tbr-record  {
+.book, .user-log, .tbr-record, .author-card  {
     display: flex;
     max-width: 700px;
     border: var(--accent) 2px solid;
@@ -102,7 +102,7 @@ h1, h2 {
     contain: cover;
 }
 
-.book .details {
+.book .details, .author-card .details {
     padding: 0 8px;
     display: flex;
     flex-direction: column;
@@ -125,8 +125,22 @@ h1, h2 {
 .user-log .read-pct,
 .user-log .notes,
 .user-log .progress-bar,
-.user-log .publication {
+.user-log .publication,
+.author-card .author-name,
+.author-card .book-count,
+.author-card .bio
+ {
     margin: 0 0 8px 0;
+}
+
+.author-placeholder {
+    width: 150px;
+    height: 150px;
+    background-color: var(--text-contrast);
+}
+
+.author-photo {
+    width: 150px;
 }
 
 .user-log .stars {

@@ -264,14 +264,14 @@ async function renderBooks() {
 function bookCard(book) {
     return `
         <div class="book">
-            <img src="${book.cover_path}" class="cover">
+            <img src="${book.cover_path ?? ''}" class="cover">
             <div class="details">
                 <h2 class="title"><a href="#" onclick="renderIndividualBook(${book.id})">${book.title}</a></h2>
                 <p class="author">${book.authors ? book.authors.map(a => `<a href="#" onclick="renderAuthorPage(${a.id})">${a.name}</a>`).join(', ') : 'No authors assigned'}</p>
                 <p class="genres">${book.genres ? book.genres.map(g => `<a href="#" onclick="renderGenrePage(${g.id})">${g.name}</a>`).join(', ') : 'No genres assigned'}</p>
                 <p class="status">Status: <span class="reading-status">${book.status ?? 'unread'}</span></p>
             </div>
-            <button class="tbr-btn ${book.tbr_id ? 'active' : ''}" aria-label="Add to TBR"  data-tbr-id="${book.tbr_id || ''}" data-book-id="${book.id}">
+            <button class="tbr-btn ${book.tbr_id ? 'active' : ''}" aria-label="Add to TBR"  data-tbr-id="${book.tbr_id ?? ''}" data-book-id="${book.id}">
                 <svg width="40" height="44" viewBox="0 0 46 44" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M23 0L28.1436 15.8291H44.7932L31.3248 25.6118L36.4684 41.4409L23 31.6582L9.53157 41.4409L14.6752 25.6118L1.20677 15.8291H17.8564L23 0Z" fill="#aaaaaa"/>
                 </svg>
@@ -550,7 +550,7 @@ function setupEditForm() {
                 notes: formData.get('notes'),
                 date_started: formData.get('date-started'),
                 // empty string isn't a valid date for MySQL — needs to be null instead
-                date_finished: formData.get('date-finished') || null
+                date_finished: formData.get('date-finished') ?? null
             })
         });
 
@@ -598,8 +598,50 @@ function setupEditForm() {
 }
 
 // TODO: build out author browsing — see stretch goals list
-function renderAuthors() {
-        app.innerHTML = '<p>Author app goes here</p>';
+async function renderAuthors() {
+    const response = await fetch('/api/authors');
+    
+    if (response.ok) {
+        const data = await response.json();
+        app.innerHTML = data.map(author => authorCard(author)).join('');
+
+        // do i need to do anything else? i don't think so.
+    } else {
+        app.innerHTML = '<p class="error-message">Error!</p>'
+    }
+}
+
+function authorCard(author) {
+    return `
+    <div class="author-card" id="author-${author.id}">
+        ${author.photo_path ? `<img src="${author.photo_path}" class="author-photo">` : '<div class="author-placeholder">Placeholder image</div>'} 
+        <div class="details">
+            <h2 class="author-name"><a href="#" onclick="renderIndividualAuthor(${author.id})">${author.name}</a></h2>
+            <p class="book-count">Number of books: ${author.book_count}</p>
+            <div class="bio">${author.bio ?? `${author.name} currently doesn't have a bio stored.`}</div>
+        </div>
+    </div>
+    `
+}
+
+async function renderIndividualAuthor(authorId) {
+    console.log(authorId);
+    const response = await fetch(`/api/authors/${authorId}`);
+
+    
+    if (response.ok) {
+        const data = await response.json();
+
+        const header = authorCard(data);
+
+        const books = data.book.map(book => bookCard(book)).join('');
+
+        // console.log(data.book)
+
+        app.innerHTML = header + books;
+    } else {
+        app.innerHTML = '<p class="error-message">Error!</p>'
+    }
 }
 
 // TODO: build out genre browsing — see stretch goals list
@@ -665,7 +707,7 @@ function tbrCards(record) {
                 </button>
             </div>
             <p>${record.authors}</p>
-            <p>${record.series ? record.series : ""}</p>
+            <p>${record.series ? record.series.name : ""}</p>
             <div class="action-buttons">
                 <button class="action-btn" data-book-id="${record.book_id}" data-tbr-id="${record.id}" data-action="start">Start Reading</button>
                 <button class="action-btn" data-book-id="${record.book_id}" data-tbr-id="${record.id}" data-action="read">Mark as Read</button>

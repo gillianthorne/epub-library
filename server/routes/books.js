@@ -26,8 +26,10 @@ router.get('/', async (req, res) => {
     try {
         // group_concat joins them all into a comma separated line
         const [rows] = await db.query(`
-            SELECT books.*,
-                series.name AS series_name,
+            SELECT DISTINCT books.*,
+                (SELECT JSON_OBJECT('id', s.id, 'name', s.name)
+                                FROM series s
+                                WHERE books.series_id = s.id) AS series,
                 (SELECT JSON_ARRAYAGG(JSON_OBJECT('id', a.id, 'name', a.name))
                     FROM book_authors ba
                     JOIN authors a ON ba.author_id = a.id
@@ -36,7 +38,11 @@ router.get('/', async (req, res) => {
                     FROM book_genres bg
                     JOIN genres g ON bg.genre_id = g.id
                     WHERE bg.book_id = books.id) AS genres,
-                user_books.status,
+                (SELECT ub.status
+					FROM user_books ub
+					WHERE ub.book_id = books.id AND ub.user_id = ?
+					ORDER BY ub.date_started DESC
+					LIMIT 1) AS status,
                 user_books.date_finished,
                 tbr_lists.id AS tbr_id
             FROM books
@@ -44,9 +50,8 @@ router.get('/', async (req, res) => {
             LEFT JOIN user_books ON books.id = user_books.book_id AND user_books.user_id = ?
             LEFT JOIN tbr_lists ON books.id = tbr_lists.book_id AND tbr_lists.user_id = ?
             GROUP BY books.id, user_books.status, user_books.date_finished, tbr_lists.id
-            ORDER BY series.id ASC
-            `, [req.session.user.id, req.session.user.id]);
-
+            `, [req.session.user.id, req.session.user.id, req.session.user.id]);
+        
         // found this on the internet and i do NOT understand it but i modified it to work
         rows.sort((a, b) => {
             const authorA = a.authors?.[0]?.name ?? '';
@@ -65,7 +70,9 @@ router.get('/:id', async (req, res) => {
     try {
         const [rows] = await db.query(`
             SELECT books.*, 
-                series.name AS series_name,
+                (SELECT JSON_OBJECT('id', s.id, 'name', s.name)
+                                FROM series s
+                                WHERE b.series_id = s.id) AS series,
                 (SELECT JSON_ARRAYAGG(JSON_OBJECT('id', a.id, 'name', a.name))
                     FROM book_authors ba
                     JOIN authors a ON ba.author_id = a.id

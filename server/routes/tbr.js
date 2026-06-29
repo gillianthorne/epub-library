@@ -25,7 +25,9 @@ router.get('/', async (req, res) => {
             SELECT tbr_lists.*,
                 books.title,
                 GROUP_CONCAT(DISTINCT authors.name) AS authors,
-                series.name AS series,
+                (SELECT JSON_OBJECT('id', s.id, 'name', s.name)
+                                FROM series s
+                                WHERE books.series_id = s.id) AS series,
                 books.cover_path
             FROM tbr_lists
             LEFT JOIN books ON tbr_lists.book_id = books.id
@@ -39,6 +41,7 @@ router.get('/', async (req, res) => {
 
         res.json(rows)
     } catch (err) {
+        console.log(err);
         res.status(500).json({ error: "Something went wrong" });
     }
 });
