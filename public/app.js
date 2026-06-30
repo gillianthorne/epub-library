@@ -264,7 +264,7 @@ async function renderBooks() {
 function bookCard(book) {
     return `
         <div class="book">
-            <img src="${book.cover_path ?? ''}" class="cover">
+            <img src="${book.cover_path}" class="cover" onerror="this.onerror=null; this.src='/covers/default.png';">
             <div class="details">
                 <h2 class="title"><a href="#" onclick="renderIndividualBook(${book.id})">${book.title}</a></h2>
                 <p class="author">${book.authors ? book.authors.map(a => `<a href="#" onclick="renderAuthorPage(${a.id})">${a.name}</a>`).join(', ') : 'No authors assigned'}</p>
@@ -379,7 +379,7 @@ async function setupActionButtons() {
 function bookData(book) {
     return `
     <div class="book">
-        <img src="${book.cover_path}" class="cover">
+        <img src="${book.cover_path}" class="cover" onerror="this.onerror=null; this.src='/covers/default.png';">
         <div class="details">
             <h2 class="title"><a href="#">${book.title}</a></h2>
             <p class="author"><a href="#">${book.authors ? book.authors.map(a => `<a href="#" onclick="renderGenrePage(${a.id})">${a.name}</a>`).join(', ') : 'No authors assigned'}</a></p>
@@ -404,7 +404,7 @@ function bookData(book) {
 function userBookData(record) {
     return `
         <div class="user-log" id="user-book-${record.id}">
-            <a href="#" onclick="renderIndividualBook(${record.book_id})"><img src="${record.cover_path}" class="cover"></a>
+            <a href="#" onclick="renderIndividualBook(${record.book_id})"><img src="${record.cover_path}" class="cover" onerror="this.onerror=null; this.src='/covers/default.png';"></a>
             <div class="details">
                 <div class="log-header">
                     <h2><a href="#" onclick="renderIndividualBook(${record.book_id})">${record.title}</a></h2>
@@ -696,7 +696,7 @@ async function renderTBR() {
 function tbrCards(record) {
     return `
     <div class="tbr-record" id="tbr-record-${record.id}">
-        <a href="#" onclick="renderIndividualBook(${record.book_id})"><img src="${record.cover_path}" class="cover"></a>
+        <a href="#" onclick="renderIndividualBook(${record.book_id})"><img src="${record.cover_path}" class="cover" onerror="this.onerror=null; this.src='/covers/default.png';"></a>
         <div class="details">
             <div class="log-header">
                 <h2><a href="#" onclick="renderIndividualBook(${record.book_id})">${record.title}</a></h2>
