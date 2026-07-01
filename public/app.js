@@ -251,6 +251,24 @@ async function renderBooks() {
 
     if (response.ok) {
         const data = await response.json();
+
+        // sort by first author's name, then series_id, then series_index
+        // (books with no series sort to the end)
+        data.sort((a, b) => {
+            const aName = a.authors?.[0]?.name ?? '';
+            const bName = b.authors?.[0]?.name ?? '';
+
+            const nameCompare = aName.localeCompare(bName, undefined, { sensitivity: 'base' });
+            if (nameCompare !== 0) return nameCompare;
+
+            const aSeries = a.series_id ?? Infinity;
+            const bSeries = b.series_id ?? Infinity;
+            if (aSeries !== bSeries) return aSeries - bSeries;
+
+            const aIndex = a.series_index ?? Infinity;
+            const bIndex = b.series_index ?? Infinity;
+            return aIndex - bIndex;
+        });   
         app.innerHTML = data.map(book => bookCard(book)).join('');
         console.log(data.length);
         setupTbrButtons(); // attach click handlers to the tbr stars
@@ -597,12 +615,14 @@ function setupEditForm() {
     })
 }
 
-// TODO: build out author browsing — see stretch goals list
 async function renderAuthors() {
     const response = await fetch('/api/authors');
     
     if (response.ok) {
         const data = await response.json();
+
+        data.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+        
         app.innerHTML = data.map(author => authorCard(author)).join('');
 
         // do i need to do anything else? i don't think so.
@@ -645,8 +665,40 @@ async function renderIndividualAuthor(authorId) {
 }
 
 // TODO: build out genre browsing — see stretch goals list
-function renderGenres() {
-        app.innerHTML = '<p>Genres app goes here</p>';
+async function renderGenres() {
+    const response = await fetch('/api/genres');
+    
+    if (response.ok) {
+        const data = await response.json();
+        data.sort((a, b) => b.book_count - a.book_count || a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+        app.innerHTML = data.map(genre => genreCard(genre)).join('');
+    } else {
+        app.innerHTML = '<p class="error-message">Error!</p>'
+    }
+}
+
+function genreCard(genre) {
+    return `
+    <div class="genre-card">
+        <p><a href="#" onclick="renderIndividualGenre(${genre.id})">${genre.name}</a> (${genre.book_count} books)</p>
+    </div>
+    `
+}
+
+async function renderIndividualGenre(genreId) {
+    const response = await fetch(`/api/genres/${genreId}`);
+
+    if (response.ok) {
+        const data = await response.json();
+
+        const header = genreCard(data);
+
+        const books = data.book.map(book => bookCard(book)).join('');
+
+        app.innerHTML = header + books;
+    } else {
+        app.innerHTML = '<p class="error-message">Error!</p>'
+    }
 }
 
 // TODO: build out tag browsing — see stretch goals list
@@ -758,17 +810,17 @@ function formatNotes(notes) {
     
     console.log('after escape:', formatted);
 
+    // i won't lie i stole the regex patterns from the internet. i don't understand it at ALL
     formatted = formatted.replace(/!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g, '<img src="$2" alt="$1">');
     formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
     formatted = formatted.replace(/\*([^*]+)\*/g, '<em>$1</em>');
     formatted = formatted.replace(/\+\+([^+]+)\+\+/g, '<u>$1</u>');
     formatted = convertLists(formatted);
 
-    console.log('final:', formatted);
-
     return formatted.replace(/\n/g, '<br>');
 }
 
+// this was also stolen/adapted from the internet
 function convertLists(text) {
     const lines = text.split('\n');
     let result = [];
@@ -794,6 +846,8 @@ function convertLists(text) {
 
     return result.join('\n');
 }
+
+
 // Kick off the app — renders the header/nav (already in index.html) and the
 // default About content, then wires up the nav for when the user clicks in
 renderApp();

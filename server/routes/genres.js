@@ -32,23 +32,87 @@ router.get('/', async (req, res) => {
 
         res.json(rows)
     } catch (err) {
+        console.log(err);
         res.status(500).json({ error: "Something went wrong" });
     }
 })
 
 // read genres by id
 router.get('/:id', async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const offset = (page - 1) * limit;
     try {
         const [rows] = await db.query(`
-            SELECT genres.*,
-                COUNT(book_genres.genre_id) AS book_count,
-                GROUP_CONCAT(DISTINCT books.title) AS books
-            FROM genres
-            LEFT JOIN book_genres ON genres.id = book_genres.genre_id
-            LEFT JOIN books ON book_genres.book_id = books.id
-            WHERE genres.id = ?
-            GROUP BY genres.id
-            `, [req.params.id]);
+            WITH userbook_priorities AS
+            (
+            SELECT ub.id AS userbookid, b.id AS bookid, u.id AS userid,
+            RANK() OVER 
+                (PARTITION BY  b.id, u.id
+                ORDER BY ub.date_started DESC) as ub_priority
+            FROM user_books ub
+            JOIN books b ON ub.book_id = b.id
+            JOIN users u ON ub.user_id = u.id
+            ), 
+            book_count AS
+            (
+            SELECT COUNT(*) AS book_count,
+                bg.genre_id
+            FROM book_genres bg
+            GROUP BY bg.genre_id
+            )
+            SELECT g.*,
+                bc.book_count,
+                ? AS page,
+                CEIL(bc.book_count / ?) AS total_pages,
+                (SELECT JSON_ARRAYAGG(JSON_OBJECT(
+                    'id', paged.id, 
+                    'title', paged.title, 
+                    'cover_path', paged.cover_path,
+                    'genres', (SELECT JSON_ARRAYAGG(JSON_OBJECT('id', g.id, 'name', g.name))
+                                FROM book_genres bg
+                                JOIN genres g ON bg.genre_id = g.id
+                                WHERE bg.book_id = paged.id
+                                ORDER BY bg.genre_id),
+                    'authors', (SELECT JSON_ARRAYAGG(JSON_OBJECT('id', a.id, 'name', a.name))
+                                FROM book_authors ba
+                                JOIN authors a ON ba.author_id = a.id
+                                WHERE ba.book_id = paged.id
+                                ORDER BY ba.author_id),
+                    'series', (SELECT JSON_OBJECT('id', s.id, 'name', s.name)
+                                FROM series s
+                                WHERE paged.series_id = s.id),
+                    'tbr_id', paged.tbr_id,
+                    'status', paged.status
+                ))
+                    FROM (
+                    SELECT b.id, b.title, b.cover_path, b.series_id,
+                        t.id AS tbr_id,
+                        ub.status
+                    FROM book_genres bg
+                    JOIN books b ON bg.book_id = b.id
+                    LEFT JOIN tbr_lists t ON b.id = t.book_id AND t.user_id = ?
+                    LEFT JOIN (
+                        user_books ub
+                        JOIN userbook_priorities ubp ON ub.id = ubp.userbookid AND ubp.ub_priority = 1
+                    ) ON b.id = ub.book_id AND ub.user_id = ?
+                    WHERE bg.genre_id = g.id
+                    ORDER BY b.id
+                    LIMIT ? OFFSET ?
+                ) AS paged
+                ) AS books
+            FROM genres g
+            JOIN book_count bc ON bc.genre_id = g.id
+            WHERE g.id = ?
+            `,  [
+                    page,
+                    limit,
+                    req.session.user.id,
+                    req.session.user.id,
+                    limit,
+                    offset,
+                    req.params.id
+                ]);
 
             if (rows.length === 0) {
             return res.status(404).json({ error: 'Genre not found' });
@@ -58,6 +122,8 @@ router.get('/:id', async (req, res) => {
         res.json(rows[0]);
         
     } catch (err) {
+        console.log("error");
+        console.log(err);
         res.status(500).json({ error: "Something went wrong" });
     }
 })

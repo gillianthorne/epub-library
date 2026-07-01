@@ -87,7 +87,7 @@ h1, h2 {
     margin: 0 16px 16px;
 }
 
-.book, .user-log, .tbr-record, .author-card  {
+.book, .user-log, .tbr-record, .author-card, .genre-card  {
     display: flex;
     max-width: 700px;
     border: var(--accent) 2px solid;
@@ -111,6 +111,22 @@ h1, h2 {
 .user-log .details, .tbr-record .details {
     padding: 0 8px;
     width: 100%
+}
+
+.genre-card {
+    align-items: center;
+    justify-content: center;
+}
+
+.genre-card .spacer {
+    width: 8px;
+}
+
+.genre-card p {
+    font-family: var(--title-font);
+    font-size: 1.5em;
+    margin: 8px 0;
+    font-weight: 700;
 }
 
 .book .title, 
@@ -165,7 +181,11 @@ h1, h2 {
     content: none;
 }
 
-.book a:hover {
+.book a:hover,
+.user-log a:hover,
+.author-card a:hover,
+.genre-card a:hover
+ {
     font-weight: 900;
 }
 
