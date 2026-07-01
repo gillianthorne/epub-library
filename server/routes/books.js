@@ -23,10 +23,13 @@ router.post('/', async(req, res) => {
 
 // read all books
 router.get('/', async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25;
+    const offset = (page - 1) * limit;
     try {
         // group_concat joins them all into a comma separated line
         const [rows] = await db.query(`
-            SELECT DISTINCT books.*,
+            SELECT books.*,
                 (SELECT JSON_OBJECT('id', s.id, 'name', s.name)
                                 FROM series s
                                 WHERE books.series_id = s.id) AS series,
@@ -44,20 +47,27 @@ router.get('/', async (req, res) => {
 					ORDER BY ub.date_started DESC
 					LIMIT 1) AS status,
                 user_books.date_finished,
-                tbr_lists.id AS tbr_id
+                tbr_lists.id AS tbr_id,
+                COUNT(*) OVER() AS total_count,
+                CEIL(COUNT(*) OVER () / ?) AS total_pages
             FROM books
             LEFT JOIN series ON books.series_id = series.id
             LEFT JOIN user_books ON books.id = user_books.book_id AND user_books.user_id = ?
             LEFT JOIN tbr_lists ON books.id = tbr_lists.book_id AND tbr_lists.user_id = ?
-            GROUP BY books.id, user_books.status, user_books.date_finished, tbr_lists.id
-            `, [req.session.user.id, req.session.user.id, req.session.user.id]);
+            LEFT JOIN book_authors ON books.id = book_authors.book_id
+            LEFT JOIN authors ON authors.id = book_authors.author_id
+            GROUP BY books.id, user_books.status, user_books.date_finished, tbr_lists.id, authors.name
+            ORDER BY authors.name ASC, books.series_id ASC
+            LIMIT ? OFFSET ?
+            `, [
+                req.session.user.id, 
+                limit,
+                req.session.user.id, 
+                req.session.user.id,
+                limit,
+                offset
+            ]);
         
-        // found this on the internet and i do NOT understand it but i modified it to work
-        rows.sort((a, b) => {
-            const authorA = a.authors?.[0]?.name ?? '';
-            const authorB = b.authors?.[0]?.name ?? '';
-            return authorA.localeCompare(authorB);
-        });
         res.json(rows);
     } catch (err) {
         res.status(500).json({ error: "Something went wrong" });

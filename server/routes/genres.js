@@ -22,13 +22,25 @@ router.post('/', async (req, res) => {
 
 // read all genres
 router.get('/', async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25;
+    const offset = (page - 1) * limit;
     try {
         const [rows] = await db.query(`
             SELECT genres.*,
-                COUNT(book_genres.genre_id) AS book_count
+                COUNT(book_genres.genre_id) AS book_count,
+                COUNT(*) OVER() AS total_count,
+                CEIL(COUNT(*) OVER() / ?) AS total_pages
             FROM genres
             LEFT JOIN book_genres ON genres.id = book_genres.genre_id
-            GROUP BY genres.id`);
+            GROUP BY genres.id
+            ORDER BY COUNT(book_genres.genre_id) DESC, genre.name ASC
+            LIMIT ? OFFSET ?`,
+        [
+            limit,
+            limit,
+            offset
+        ]);
 
         res.json(rows)
     } catch (err) {
@@ -40,7 +52,7 @@ router.get('/', async (req, res) => {
 // read genres by id
 router.get('/:id', async (req, res) => {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+    const limit = parseInt(req.query.limit) || 25;
     const offset = (page - 1) * limit;
     try {
         const [rows] = await db.query(`
@@ -65,41 +77,45 @@ router.get('/:id', async (req, res) => {
                 bc.book_count,
                 ? AS page,
                 CEIL(bc.book_count / ?) AS total_pages,
-                (SELECT JSON_ARRAYAGG(JSON_OBJECT(
-                    'id', paged.id, 
-                    'title', paged.title, 
-                    'cover_path', paged.cover_path,
-                    'genres', (SELECT JSON_ARRAYAGG(JSON_OBJECT('id', g.id, 'name', g.name))
-                                FROM book_genres bg
-                                JOIN genres g ON bg.genre_id = g.id
-                                WHERE bg.book_id = paged.id
-                                ORDER BY bg.genre_id),
-                    'authors', (SELECT JSON_ARRAYAGG(JSON_OBJECT('id', a.id, 'name', a.name))
-                                FROM book_authors ba
-                                JOIN authors a ON ba.author_id = a.id
-                                WHERE ba.book_id = paged.id
-                                ORDER BY ba.author_id),
-                    'series', (SELECT JSON_OBJECT('id', s.id, 'name', s.name)
-                                FROM series s
-                                WHERE paged.series_id = s.id),
-                    'tbr_id', paged.tbr_id,
-                    'status', paged.status
-                ))
-                    FROM (
-                    SELECT b.id, b.title, b.cover_path, b.series_id,
-                        t.id AS tbr_id,
-                        ub.status
-                    FROM book_genres bg
-                    JOIN books b ON bg.book_id = b.id
-                    LEFT JOIN tbr_lists t ON b.id = t.book_id AND t.user_id = ?
-                    LEFT JOIN (
-                        user_books ub
-                        JOIN userbook_priorities ubp ON ub.id = ubp.userbookid AND ubp.ub_priority = 1
-                    ) ON b.id = ub.book_id AND ub.user_id = ?
-                    WHERE bg.genre_id = g.id
-                    ORDER BY b.id
-                    LIMIT ? OFFSET ?
-                ) AS paged
+                COALESCE (
+                    (SELECT JSON_ARRAYAGG(JSON_OBJECT(
+                        'id', paged.id, 
+                        'title', paged.title, 
+                        'cover_path', paged.cover_path,
+                        'genres', (SELECT JSON_ARRAYAGG(JSON_OBJECT('id', g.id, 'name', g.name))
+                                    FROM book_genres bg
+                                    JOIN genres g ON bg.genre_id = g.id
+                                    WHERE bg.book_id = paged.id
+                                    ORDER BY bg.genre_id),
+                        'authors', (SELECT JSON_ARRAYAGG(JSON_OBJECT('id', a.id, 'name', a.name))
+                                    FROM book_authors ba
+                                    JOIN authors a ON ba.author_id = a.id
+                                    WHERE ba.book_id = paged.id
+                                    ORDER BY ba.author_id),
+                        'series', (SELECT JSON_OBJECT('id', s.id, 'name', s.name)
+                                    FROM series s
+                                    WHERE paged.series_id = s.id),
+                        'tbr_id', paged.tbr_id,
+                        'status', paged.status
+                    ))
+                        FROM (
+                        SELECT b.id, b.title, b.cover_path, b.series_id,
+                            t.id AS tbr_id,
+                            ub.status
+                        FROM book_genres bg
+                        JOIN books b ON bg.book_id = b.id
+                        LEFT JOIN tbr_lists t ON b.id = t.book_id AND t.user_id = ?
+                        LEFT JOIN (
+                            user_books ub
+                            JOIN userbook_priorities ubp ON ub.id = ubp.userbookid AND ubp.ub_priority = 1
+                        ) ON b.id = ub.book_id AND ub.user_id = ?
+                        JOIN book_authors ba ON b.id = ba.book_id
+                        JOIN authors a ON ba.author_id = a.id
+                        WHERE bg.genre_id = g.id
+                        ORDER BY a.name ASC, b.series_id ASC, b.series_index ASC, b.title ASC
+                        LIMIT ? OFFSET ?
+                    ) AS paged),
+                     JSON_ARRAY()
                 ) AS books
             FROM genres g
             JOIN book_count bc ON bc.genre_id = g.id

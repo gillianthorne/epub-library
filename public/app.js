@@ -180,9 +180,9 @@ function renderApp() {
             // every protected page is wrapped in requireAuth(). this checks
             // if the user is actually logged in before loading the page, and 
             // shows them the login form instead if they aren't
-            if (page === 'books') requireAuth(renderBooks);
-            else if (page === 'authors') requireAuth(renderAuthors);
-            else if (page === 'genres') requireAuth(renderGenres);
+            if (page === 'books') requireAuth(() => renderBooks(1, 25));
+            else if (page === 'authors') requireAuth(() => renderAuthors(1, 25));
+            else if (page === 'genres') requireAuth(() => renderGenres(1, 25));
             else if (page === 'tags') requireAuth(renderTags);
             else if (page === 'shelf') requireAuth(renderShelf);
             else if (page === 'tbr') requireAuth(renderTBR);
@@ -245,33 +245,49 @@ function renderAbout() {
     `
 }
 
+function renderPaginationButtons(page, totalPages) {
+    let buttonHTML = `<div class='pagination-buttons'>
+                        <button id='pagination-back' style='${page <= 1 ? "visibility: hidden" : "visibility: visible"}'>&lt;</button>
+                        ${page}
+                        <button id='pagination-forward' style='${page >= totalPages ? "visibility: hidden" : "visibility: visible"}'>&gt;</button>
+                    </div>`;
+
+    return buttonHTML;
+}
+
+// TODO: ADD MORE PATHS
+function setupPaginationButtons(path, page, limit, pathId) {
+    const paginationBack = document.querySelector('#pagination-back');
+    const paginationForward = document.querySelector('#pagination-forward');
+
+    paginationBack.addEventListener('click', async () => {
+        if (path === 'genres') renderIndividualGenre(pathId, page - 1, limit);
+        else if (path === 'authors') renderIndividualAuthor(pathId, page - 1, limit);
+        else if (path === 'allAuthors') renderAuthors(page - 1, limit);
+        else if (path === 'allBooks') renderBooks(page - 1, limit);
+        else if (path === 'allGenres') renderGenres(page - 1, limit);
+    });
+
+    paginationForward.addEventListener('click', async () => {
+        if (path === 'genres') renderIndividualGenre(pathId, page + 1, limit);
+        else if (path === 'authors') renderIndividualAuthor(pathId, page + 1, limit);
+        else if (path === 'allAuthors') renderAuthors(page + 1, limit);
+        else if (path === 'allBooks') renderBooks(page + 1, limit);
+        else if (path === 'allGenres') renderGenres(page + 1, limit);
+    })
+}
+
 // fetches every book in the library and renders them as a list of cards
-async function renderBooks() {
-    const response = await fetch('/api/books');
+async function renderBooks(page, limit) {
+    const response = await fetch(`/api/books/?page=${page}&limit=${limit}`);
 
     if (response.ok) {
         const data = await response.json();
 
-        // sort by first author's name, then series_id, then series_index
-        // (books with no series sort to the end)
-        data.sort((a, b) => {
-            const aName = a.authors?.[0]?.name ?? '';
-            const bName = b.authors?.[0]?.name ?? '';
+        app.innerHTML = data.map(book => bookCard(book)).join('') + renderPaginationButtons(page, data[0].total_pages)
 
-            const nameCompare = aName.localeCompare(bName, undefined, { sensitivity: 'base' });
-            if (nameCompare !== 0) return nameCompare;
-
-            const aSeries = a.series_id ?? Infinity;
-            const bSeries = b.series_id ?? Infinity;
-            if (aSeries !== bSeries) return aSeries - bSeries;
-
-            const aIndex = a.series_index ?? Infinity;
-            const bIndex = b.series_index ?? Infinity;
-            return aIndex - bIndex;
-        });   
-        app.innerHTML = data.map(book => bookCard(book)).join('');
-        console.log(data.length);
         setupTbrButtons(); // attach click handlers to the tbr stars
+        setupPaginationButtons("allBooks", page, limit);
     } else {
         app.innerHTML = '<p class="error-message">Error!</p>'
     }    
@@ -615,16 +631,17 @@ function setupEditForm() {
     })
 }
 
-async function renderAuthors() {
-    const response = await fetch('/api/authors');
+async function renderAuthors(page, limit) {
+    const response = await fetch(`/api/authors?page=${page}&limit=${limit}`);
     
     if (response.ok) {
         const data = await response.json();
-
-        data.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
         
-        app.innerHTML = data.map(author => authorCard(author)).join('');
+        // all data entries will have the same total_count
+        const pageBtns = renderPaginationButtons(page, data[0].total_pages);
 
+        app.innerHTML = data.map(author => authorCard(author)).join('') + pageBtns;
+        setupPaginationButtons('allAuthors', page, limit);
         // do i need to do anything else? i don't think so.
     } else {
         app.innerHTML = '<p class="error-message">Error!</p>'
@@ -636,7 +653,7 @@ function authorCard(author) {
     <div class="author-card" id="author-${author.id}">
         ${author.photo_path ? `<img src="${author.photo_path}" class="author-photo">` : '<div class="author-placeholder">Placeholder image</div>'} 
         <div class="details">
-            <h2 class="author-name"><a href="#" onclick="renderIndividualAuthor(${author.id})">${author.name}</a></h2>
+            <h2 class="author-name"><a href="#" onclick="renderIndividualAuthor(${author.id}, 1, 25)">${author.name}</a></h2>
             <p class="book-count">Number of books: ${author.book_count}</p>
             <div class="bio">${author.bio ?? `${author.name} currently doesn't have a bio stored.`}</div>
         </div>
@@ -644,34 +661,39 @@ function authorCard(author) {
     `
 }
 
-async function renderIndividualAuthor(authorId) {
-    console.log(authorId);
-    const response = await fetch(`/api/authors/${authorId}`);
+async function renderIndividualAuthor(authorId, page, limit) {
+    const response = await fetch(`/api/authors/${authorId}?page=${page}&limit=${limit}`);
 
     
     if (response.ok) {
         const data = await response.json();
 
+        console.log(data)
+
         const header = authorCard(data);
 
-        const books = data.book.map(book => bookCard(book)).join('');
+        const books = data.books.map(book => bookCard(book)).join('');
 
-        // console.log(data.book)
+        const pageBtns = renderPaginationButtons(page, data.total_pages);
 
-        app.innerHTML = header + books;
+        app.innerHTML = header + books + pageBtns;
+
+        setupTbrButtons()
+        setupPaginationButtons('authors', page, limit, authorId)
     } else {
         app.innerHTML = '<p class="error-message">Error!</p>'
     }
 }
 
 // TODO: build out genre browsing — see stretch goals list
-async function renderGenres() {
-    const response = await fetch('/api/genres');
+async function renderGenres(page, limit) {
+    const response = await fetch(`/api/genres?page=${page}&limit=${limit}`);
     
     if (response.ok) {
         const data = await response.json();
-        data.sort((a, b) => b.book_count - a.book_count || a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
-        app.innerHTML = data.map(genre => genreCard(genre)).join('');
+
+        app.innerHTML = data.map(genre => genreCard(genre)).join('') + renderPaginationButtons(page, data[0].total_pages);
+        setupPaginationButtons('allGenres', page, limit)
     } else {
         app.innerHTML = '<p class="error-message">Error!</p>'
     }
@@ -680,22 +702,27 @@ async function renderGenres() {
 function genreCard(genre) {
     return `
     <div class="genre-card">
-        <p><a href="#" onclick="renderIndividualGenre(${genre.id})">${genre.name}</a> (${genre.book_count} books)</p>
+        <p><a href="#" onclick="renderIndividualGenre(${genre.id}, 1, 25)">${genre.name}</a> (${genre.book_count} books)</p>
     </div>
     `
 }
 
-async function renderIndividualGenre(genreId) {
-    const response = await fetch(`/api/genres/${genreId}`);
+async function renderIndividualGenre(genreId, page, limit) {
+    const response = await fetch(`/api/genres/${genreId}?page=${page}&limit=${limit}`);
 
     if (response.ok) {
         const data = await response.json();
 
         const header = genreCard(data);
 
-        const books = data.book.map(book => bookCard(book)).join('');
+        const books = data.books.map(book => bookCard(book)).join('');
 
-        app.innerHTML = header + books;
+        const pageBtns = renderPaginationButtons(page, data.total_pages);
+
+        app.innerHTML = header + books + pageBtns;
+
+        setupTbrButtons()
+        setupPaginationButtons('genres', page, limit, genreId);
     } else {
         app.innerHTML = '<p class="error-message">Error!</p>'
     }
@@ -801,15 +828,12 @@ function renderStars(rating) {
 function formatNotes(notes) {
     // if we don't have any notes, return that
     if (!notes) return '';
-    console.log('input:', notes);
 
     let formatted = notes
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
     
-    console.log('after escape:', formatted);
-
     // i won't lie i stole the regex patterns from the internet. i don't understand it at ALL
     formatted = formatted.replace(/!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g, '<img src="$2" alt="$1">');
     formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
