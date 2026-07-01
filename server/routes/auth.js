@@ -38,6 +38,7 @@ router.post('/login', async (req, res) => {
 
         res.json({message: "Logged in successfully", user: req.session.user});
     } catch (err) {
+        console.log(err);
         res.status(500).json({ error: "Something went wrong" })
     }
 });
