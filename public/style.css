@@ -255,6 +255,34 @@ h1, h2 {
     border: var(--accent) 2px solid;
 }
 
+.pagination-buttons {
+    background: var(--contrast-background);
+    border: var(--accent) 2px solid;
+    border-radius: 30px;
+    padding: 8px;
+    color: var(--text-primary);
+    font-family: var(--body-font);
+    font-size: 1.5rem;
+    width: 120px;
+    text-align: center;
+    margin: 0 auto;
+}
+
+#pagination-back, #pagination-forward {
+    background-color: var(--contrast-background);
+    color: var(--text-primary);
+    font-family: var(--body-font);
+    font-size: 1.8rem;
+    border: none;
+    cursor: pointer;
+    border-radius: 50%;
+    width: 30px;
+}
+
+#pagination-back:hover, #pagination-forward:hover {
+    font-weight: 900;
+}
+
 .tbr-btn {
     margin-left: auto;
     background: none;
