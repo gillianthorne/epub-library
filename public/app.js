@@ -10,6 +10,7 @@ const displayName = document.querySelectorAll('.display-name');
 // that fetches this data has finished running
 let currentBook = null;
 let currentUserBooks = [];
+let pageSize = 25;
 
 // toggle mobile nav menu
 hamburger.addEventListener('click', (e) => {
@@ -180,9 +181,9 @@ function renderApp() {
             // every protected page is wrapped in requireAuth(). this checks
             // if the user is actually logged in before loading the page, and 
             // shows them the login form instead if they aren't
-            if (page === 'books') requireAuth(() => renderBooks(1, 25));
-            else if (page === 'authors') requireAuth(() => renderAuthors(1, 25));
-            else if (page === 'genres') requireAuth(() => renderGenres(1, 25));
+            if (page === 'books') requireAuth(() => renderBooks(1, pageSize));
+            else if (page === 'authors') requireAuth(() => renderAuthors(1, pageSize));
+            else if (page === 'genres') requireAuth(() => renderGenres(1, pageSize));
             else if (page === 'tags') requireAuth(renderTags);
             else if (page === 'shelf') requireAuth(renderShelf);
             else if (page === 'tbr') requireAuth(renderTBR);
@@ -247,9 +248,9 @@ function renderAbout() {
 
 function renderPaginationButtons(page, totalPages) {
     let buttonHTML = `<div class='pagination-buttons'>
-                        <button id='pagination-back' style='${page <= 1 ? "visibility: hidden" : "visibility: visible"}'>&lt;</button>
+                        <button id='pagination-back' style='${page <= 1 ? "visibility: hidden" : "visibility: visible"}'>&lsaquo;</button>
                         ${page}
-                        <button id='pagination-forward' style='${page >= totalPages ? "visibility: hidden" : "visibility: visible"}'>&gt;</button>
+                        <button id='pagination-forward' style='${page >= totalPages ? "visibility: hidden" : "visibility: visible"}'>&rsaquo;</button>
                     </div>`;
 
     return buttonHTML;
