@@ -654,7 +654,7 @@ function authorCard(author) {
     <div class="author-card" id="author-${author.id}">
         ${author.photo_path ? `<img src="${author.photo_path}" class="author-photo">` : '<div class="author-placeholder">Placeholder image</div>'} 
         <div class="details">
-            <h2 class="author-name"><a href="#" onclick="renderIndividualAuthor(${author.id}, 1, 25)">${author.name}</a></h2>
+            <h2 class="author-name"><a href="#" onclick="renderIndividualAuthor(${author.id}, 1, ${pageSize})">${author.name}</a></h2>
             <p class="book-count">Number of books: ${author.book_count}</p>
             <div class="bio">${author.bio ?? `${author.name} currently doesn't have a bio stored.`}</div>
         </div>
@@ -703,7 +703,7 @@ async function renderGenres(page, limit) {
 function genreCard(genre) {
     return `
     <div class="genre-card">
-        <p><a href="#" onclick="renderIndividualGenre(${genre.id}, 1, 25)">${genre.name}</a> (${genre.book_count} books)</p>
+        <p><a href="#" onclick="renderIndividualGenre(${genre.id}, 1, ${pageSize})">${genre.name}</a> (${genre.book_count} books)</p>
     </div>
     `
 }
