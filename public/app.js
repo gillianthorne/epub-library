@@ -172,6 +172,7 @@ async function signUpResponse() {
 // and wires up the nav links to load the right page when clicked
 function renderApp() {
     app.innerHTML = renderAbout();
+    jumpToTop();
 
     document.querySelectorAll('[data-page]').forEach(link => {
         link.addEventListener('click', (e) => {
@@ -289,6 +290,7 @@ async function renderBooks(page, limit) {
 
         setupTbrButtons(); // attach click handlers to the tbr stars
         setupPaginationButtons("allBooks", page, limit);
+        jumpToTop();
     } else {
         app.innerHTML = '<p class="error-message">Error!</p>'
     }    
@@ -337,6 +339,7 @@ async function renderIndividualBook(id) {
         setupActionButtons();
         setupTbrButtons();
         setupEditButtons();
+        jumpToTop();
     } else {
         app.innerHTML = '<p class="error-message">Error!</p>'
     }
@@ -643,7 +646,7 @@ async function renderAuthors(page, limit) {
 
         app.innerHTML = data.map(author => authorCard(author)).join('') + pageBtns;
         setupPaginationButtons('allAuthors', page, limit);
-        // do i need to do anything else? i don't think so.
+        jumpToTop();
     } else {
         app.innerHTML = '<p class="error-message">Error!</p>'
     }
@@ -679,8 +682,9 @@ async function renderIndividualAuthor(authorId, page, limit) {
 
         app.innerHTML = header + books + pageBtns;
 
-        setupTbrButtons()
-        setupPaginationButtons('authors', page, limit, authorId)
+        setupTbrButtons();
+        setupPaginationButtons('authors', page, limit, authorId);
+        jumpToTop();
     } else {
         app.innerHTML = '<p class="error-message">Error!</p>'
     }
@@ -694,7 +698,8 @@ async function renderGenres(page, limit) {
         const data = await response.json();
 
         app.innerHTML = data.map(genre => genreCard(genre)).join('') + renderPaginationButtons(page, data[0].total_pages);
-        setupPaginationButtons('allGenres', page, limit)
+        setupPaginationButtons('allGenres', page, limit);
+        jumpToTop();
     } else {
         app.innerHTML = '<p class="error-message">Error!</p>'
     }
@@ -722,8 +727,9 @@ async function renderIndividualGenre(genreId, page, limit) {
 
         app.innerHTML = header + books + pageBtns;
 
-        setupTbrButtons()
+        setupTbrButtons();
         setupPaginationButtons('genres', page, limit, genreId);
+        jumpToTop();
     } else {
         app.innerHTML = '<p class="error-message">Error!</p>'
     }
@@ -748,6 +754,7 @@ async function renderShelf() {
         app.innerHTML = data.map(book => userBookData(book)).join('');
 
         setupEditButtons();
+        jumpToTop();
     } else {
         app.innerHTML = '<p class="error-message">Error!</p>';
     }
@@ -765,6 +772,7 @@ async function renderTBR() {
 
         setupTbrButtons();
         setupActionButtons();
+        jumpToTop();
     } else {
         app.innerHTML = '<p class="error-message">Error!</p>';
     }
@@ -870,6 +878,16 @@ function convertLists(text) {
     if (inList) result.push('</ul>'); // close if notes end while still in a list
 
     return result.join('\n');
+}
+
+// yes this is one line but it's easier to remember to call this than to 
+// remember the actual line of code (though that's easy too)
+// AND it's easier to read. also troubleshoot if it works wrong.
+function jumpToTop() {
+    window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+    });
 }
 
 
