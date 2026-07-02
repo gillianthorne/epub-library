@@ -57,7 +57,7 @@ router.get('/', async (req, res) => {
             LEFT JOIN book_authors ON books.id = book_authors.book_id
             LEFT JOIN authors ON authors.id = book_authors.author_id
             GROUP BY books.id, user_books.status, user_books.date_finished, tbr_lists.id, authors.name
-            ORDER BY authors.name ASC, books.series_id ASC
+            ORDER BY authors.name ASC, books.series_id ASC, books.series_index ASC, books.title
             LIMIT ? OFFSET ?
             `, [
                 req.session.user.id, 
